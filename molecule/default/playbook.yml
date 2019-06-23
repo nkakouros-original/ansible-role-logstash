@@ -1,5 +1,64 @@
 ---
+
 - name: Converge
   hosts: all
   roles:
-    - role: ansible/roles/services/nkakouros.logstash
+    - role: nkakouros.logstash
+  vars:
+    # Re-using variables from `molecule/default/prepare.yml` to show how
+    # existing information could be re-used if you combined the two playbooks
+    # (`prepare.yml` and `playbook.yml` in one).
+    elastic_certificates_download_dir: ~/elk/certs/
+    elastic_certificates_password: 'nk}$Q%];a3Gy$E!QvT8E'
+    elastic_builtin_users_password_backup_file: ~/elk/elastic-passwords
+    logstash_config:
+      http:
+        port: 9600
+        host: 127.0.0.1
+    logstash_pipeline_configs:
+      - id: main
+        files:
+          - beat-input.conf
+          - elastic-output.conf
+    # TODO do not hardcode this
+    logstash_keystore_password: 'LjkC*LRLsWJ42/gqR.Z;'
+    logstash_config_pkcs1_to_pkcs8:
+      - file: "{{ logstash_config_beat_input_ssl_key | replace('.p8', '') }}"
+        passphrase: "{{ elastic_certificates_password }}"
+    logstash_config_pkcs1_to_pkcs12:
+      - cert: "{{ logstash_config_beat_input_ssl_certificate }}"
+        key: "{{ logstash_config_beat_input_ssl_key | replace('.p8', '') }}"
+        passphrase: "{{ elastic_certificates_password }}"
+    logstash_config_beat_input_host: "{{ ansible_default_ipv4.address }}"
+    logstash_config_beat_input_ssl: true
+    logstash_config_beat_input_ssl_certificate:
+      "{{ elastic_certificates_download_dir }}/logstash/logstash.crt"
+    logstash_config_beat_input_ssl_ca:
+      "{{ elastic_certificates_download_dir }}/ca/ca.crt"
+    logstash_config_beat_input_ssl_key:
+      "{{ elastic_certificates_download_dir }}/logstash/logstash.key.p8"
+    logstash_config_beat_input_ssl_verify_mode: force_peer
+    logstash_elastic_output_user: >-
+      {{
+        (
+          lookup('file', elastic_builtin_users_password_backup_file)
+          | from_yaml
+          | selectattr('name', 'equalto', 'elastic')
+          | list
+        )[0]
+      }}
+    logstash_config_elastic_output_user:
+      "{{ logstash_elastic_output_user['name'] }}"
+    logstash_config_elastic_output_password:
+      "{{ logstash_elastic_output_user['password'] }}"
+    logstash_config_elastic_output_ssl: true
+    logstash_config_elastic_output_ssl_ca:
+      "{{ elastic_certificates_download_dir }}/ca/ca.crt"
+    logstash_config_elastic_output_ssl_keystore:
+      "{{ elastic_certificates_download_dir }}/logstash/logstash.p12"
+    logstash_config_elastic_output_ssl_keystore_password:
+      "{{ elastic_certificates_password }}"
+    logstash_config_elastic_output_extra: |
+      http_compression => true
+      manage_template => false
+    logstash_config_elastic_output_conditional: '[agent][type] =~ "beat"'
