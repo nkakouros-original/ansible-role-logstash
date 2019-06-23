@@ -4,11 +4,11 @@
 
 - include_tasks: variables.yml
 
-# - include_tasks: "core/install/{{ ansible_os_family }}.yml"
+- include_tasks: "core/install/{{ ansible_os_family }}.yml"
 
-# - include_tasks: core/configure.yml
+- include_tasks: core/configure.yml
 
-# - include_tasks: core/keystore.yml
+- include_tasks: core/keystore.yml
 
 - include_tasks: pipelines/keystore.yml
 
