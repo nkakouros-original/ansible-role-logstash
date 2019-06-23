@@ -1,0 +1,8 @@
+---
+
+_logstash_default_config:
+  node:
+    name: "{{ logstash_node_name }}"
+  http:
+    host: 127.0.0.1
+    port: 9200

@@ -1,0 +1,4 @@
+---
+
+- include_tasks: logstash.yml
+  when: logstash_enabled | bool

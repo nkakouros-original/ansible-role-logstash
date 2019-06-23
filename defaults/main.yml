@@ -1,0 +1,197 @@
+---
+
+logstash_enabled: true
+# Set to false to completely disable the role
+
+# Installation {{{
+logstash_major_version: 7
+# The major version of logstash to install.
+
+logstash_user: root
+# The user that will own logstash configuration files. Logstash will run as the
+# `logstash` user as configured in the systemd configuration file, regardless of
+# this setting. If you want to change the user that logstash will run as, you
+# can use the `logstash_startup_overrides` variable.
+
+logstash_group: logstash
+# The group that `logstash_user` will be added to. If the `logstash_user` is
+# `root`, the `root` user will not be added to this group. By default, when
+# installing logstash, the configuration files are owned by user `root` and
+# group `root`.  The default behavior of the role is to set the group ownership
+# to `logstash` and restrict permissions for `other` users.
+# }}}
+# Security {{{
+logstash_keystore_password: ~
+# The password to protect the logstash keystore. This variable will be added to
+# the `startup.options` file in plaintext and be loaded when logstash starts so
+# that logstash can open the keystore. The `startup.options` file permissions
+# are restricted so that only `logstash_user` and `logstash_group` can read this
+# file.
+
+logstash_keystore_update: false
+# Set to true if you need to update any password or certificate passphrase that
+# is stored in the logstash keystore. There is no way of reading the stored
+# value and check if the values need updating. Thus, the default is to not
+# update to support idempotency. If you don't care about idempotency, you can
+# set this to true to always re-add the keystore entries.
+# }}}
+# Configuration {{{
+logstash_jvm_min_heap_size: 1g
+logstash_jvm_max_heap_size: 1g
+# Set the minimum and maximum JVM heap size in jvm.options
+
+logstash_jvm_extra_config: ~
+# Use this to append extra configuration directives in the jvm.options file.
+# These directives will override any previous ones in the jvm.options file. Eg:
+# logstash_jvm_extra_config: |
+#   -Dfile.encoding=UTF-8
+
+logstash_startup_overrides: >-
+  {%- if logstash_keystore_password != None -%}
+    LOGSTASH_KEYSTORE_PASS='{{ logstash_keystore_password }}'
+  {%- endif -%}
+# Use this variable to change entries in `/etc/logstash/startup.options`
+# such as the user or group logstash will run as via systemd. Set this to
+# `None`/`~` if you do not want to add any overrides. Example:
+# logstash_startup_overrides: ~
+
+logstash_pipelines:
+  - pipeline:
+      id: main
+    path:
+      config: "/etc/logstash/conf.d/*.conf"
+# Use this variable to configure the logstash pipelines. The default value here
+# is the the default that comes with a fresh logstash installation and which
+# defines a single pipeline. This variable will be output as YAML in the
+# `/etc/logstash/pipelines.yml` file.
+
+logstash_pipeline_configs: []
+# A list of `.conf` files to upload to `logstash`. The list can contain files
+# from the `files` and `templates` folders of this role as well as absolute
+# paths to you own configs. The format of the list should be:
+# ```yaml
+# logstash_pipeline_configs:
+#   - id: main  # The id of the pipeline, used to find the `path.config` setting
+#     files:
+#       - /path/to/custom/conf1
+#       - beat-input.conf
+# ```
+# The default location to upload pipeline configs is defined in the
+# `vars/main.yml` in the default logstash config that comes with the role.  The
+# default path is `/etc/logstash/conf.d/`. You can set the `path.config` setting
+# in `logstash_config` to override it globally or set the `path.config` setting
+# of a specific pipeline in `logstash_pipelines` to override it for that
+# specific pipeline only.
+
+logstash_config: {}
+# Use this variables as a yaml dict to set any logstash configuration
+# directives. This array will be combined with the default settings that come
+# with this role and be output into `/etc/logstash/logstasth.yml` as yaml. The
+# variables below are used by the default configuration that comes with this
+# role and are meant as a convenience. Of course, you can ignore them and set
+# the relevant settings directly into `logstash_config`.
+
+logstash_node_name: "{{ inventory_hostname }}"
+# A descriptive name for the node.
+# }}}
+# Pipeline configurations {{{
+# The variables in this section are used by the templates that come with this
+# role. Their names should explain what they intend to do. If you need to
+# clarify what a variable does, look at the setting it configures in the
+# corresponding template. The special key in each configuration below that ends
+# with `_extra` takes a yaml block that will be output as is in the `.conf`
+# file. Eg:
+# ```
+# logstash_config_beat_input_extra: |
+#   tags => ['tag1', 'tag2']
+# ```
+#
+# Also, variables that are named like `logstash_config_.*_ssl_.*` will be picked
+# up by the role and, if they point to a file on the Ansible controller, they
+# will be uploaded to the logstash server under
+# `/etc/logstash/certs/<conf-name>`, where `<conf-name>` is the string between
+# `logstash_config_` and `_ssl_.*`. For instance, if you use the
+# `beat-input.conf` file that comes with the role, the folder where the ssl
+# certificates will be uploaded to (if you have set the relevant ssl variables)
+# will be `/etc/logstash/certs/beat_input/`.
+#
+# Further, variables that are named like `logstash_config_.*_user` or
+# `logstash_config_.*_username` or `logstash_config_.*_pass` or
+# `logstash_config_.*_password` or `logstash_config_.*_passphrase` will be
+# picked up by the role and will be added to the secure logstash keystore. These
+# variables imply sensitive information such as usernames, passwords or
+# certificate passphrases that should not be stored in plaintext. You can use
+# the naming convention above if you want to configure a custom plugin and you
+# do not want to store sensitive data as plaintext in the `.conf` file for you
+# plugin. In the `.conf` file, these variables will be available as `{varname}`
+# where `varname` is the name of the variable itself.
+#
+# Remember to choose the templates and your own input/filter/output
+# configuration files using the `logstash_pipeline_configs` variable.
+
+logstash_config_pkcs1_to_pkcs8: []
+# Use this variable if you need to have private keys converted from pkcs1 (rsa)
+# format to pkcs8. This is useful when configuring ssl for the beats input
+# plugin, since the plugin expects the private key to be in pkcs8 format. A use
+# case is to have the `elasticsearch-certutil` tool that comes with the
+# elasticsearch installation to generate pkcs#1 PEM encoded certificates and
+# keys (`nkakouros.elasticsearch` allows you to do that) for all nodes and
+# software in an ELK installation. The logstash certificate key you will get in
+# that case, will not be suitable to use in the logstash beats input plugin
+# directly as it is not in PKCS#8 format. The pkcs#8 version of each key will be
+# placed in the same
+# folder on the ansible controller as the original key with the added extension
+# of `.p8`. Eg: `/etc/certs/logstash.key` will become
+# `/etc/certs/logstash.key.p8`. The format of the variable is:
+# ```
+# logstash_config_pkcs1_to_pkcs8:
+#   - file: /path/to/pkcs#1/private/key
+#     passphrase: passphrase-if-private-key-is-encrypted
+#     encrypt: true/false  # whether to apply the same passphrase to the pkcs#8 key
+
+logstash_config_pkcs1_to_pkcs12: []
+# The same as `logstash_config_pkcs1_to_pkcs8` but is used to bundle
+# certificates and private keys together in a single file. The output file will
+# have a suffix `.p12` and will be placed in the same directory as the original
+# key.  The format is:
+# ```
+# logstash_config_pkcs1_to_pkcs12:
+#   - cert: /path/to/the/certificate
+#     key: /path/to/the/pkcs#1/certificate/key
+#     passphrase: passphrase-if-private-key-is-encrypted
+#     encrypt: true/false  # whether to apply the same passphrase to the pcks#12 file
+# ```
+## Beat Input configuration | `templates/beat-input.conf` {{{
+logstash_config_beat_input_port: 5044
+logstash_config_beat_input_host: 0.0.0.0
+logstash_config_beat_input_ssl: false
+logstash_config_beat_input_ssl_certificate: ~
+logstash_config_beat_input_ssl_ca: ~
+logstash_config_beat_input_ssl_key: ~
+logstash_config_beat_input_ssl_key_passphrase: ~
+logstash_config_beat_input_ssl_verify_mode: ~
+logstash_config_beat_input_id: 'beat-input'
+logstash_config_beat_input_conditional: '1 == 1'
+logstash_config_beat_input_extra: ~
+## }}}
+## Elastisearch output configuration | `templates/elastic-output.conf` {{{
+logstash_config_elastic_output_id: 'elastic-output'
+logstash_config_elastic_output_hosts:
+  - 127.0.0.1:9200
+logstash_config_elastic_output_user: ~
+logstash_config_elastic_output_password: ~
+logstash_config_elastic_output_ssl: false
+logstash_config_elastic_output_ssl_certificate_verification: true
+logstash_config_elastic_output_ssl_ca: ~
+logstash_config_elastic_output_ssl_keystore: ~
+logstash_config_elastic_output_ssl_keystore_password: ~
+logstash_config_elastic_output_conditional: '1 == 1'
+logstash_config_elastic_output_extra: |
+  http_compression => true
+## }}}
+# File output configuration | `templates/file-output.conf`
+logstash_config_file_output_id: 'file-output'
+logstash_config_file_output_path: /var/log/logstash/file.out
+logstash_config_file_output_conditional: '1 == 1'
+logstash_config_file_output_extra: ~
+# }}}

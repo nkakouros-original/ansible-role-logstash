@@ -1,0 +1,73 @@
+---
+
+- name: Convert pkcs1 private keys to pkcs8
+  command: >-
+    openssl pkcs8 -topk8
+      -in '{{ item.file }}'
+      -out '{{ item.file }}.p8'
+      {{ '-passin env:pass' if item.passphrase != None
+         else '' }}
+      {{ '-passout env:pass' if item.encrypt | default(false) | bool
+         else '-nocrypt' }}
+  environment:
+    pass: "{{ item.passphrase }}"
+  args:
+    creates: "{{ item.file }}.p8"
+  loop: "{{ logstash_config_pkcs1_to_pkcs8 }}"
+  delegate_to: localhost
+  become: false
+
+- name: Convert pkcs1 certificates and keys to pkcs12
+  command: >-
+    openssl pkcs12 -export
+      -inkey '{{ item.key }}'
+      -in '{{ item.cert }}'
+      -out '{{ item.cert | regex_replace("\.[^.]*$", "") }}.p12'
+      {{ '-passin env:pass' if item.passphrase != None else '' }}
+      -passout env:pass
+  environment:
+    # PKCS#12 keystores always have a passphrase. It can be blank though.
+    pass: "{{ item.passphrase | default('', true) }}"
+  args:
+    creates: "{{ item.cert | regex_replace('\\.[^.]*$', '') }}.p12"
+  loop: "{{ logstash_config_pkcs1_to_pkcs12 }}"
+  delegate_to: localhost
+  become: false
+  no_log: true
+
+- name: Get all certificate variables
+  set_fact:
+    _logstash_certificate_variables:
+      "{{ q('varnames', '^logstash_config_.*_ssl_.*') }}"
+
+- name: Create certificate folders
+  file:
+    path: >-
+      /etc/logstash/certs/{{
+        item | regex_replace('logstash_config_(.*)_ssl_.*', '\1')
+      }}
+    state: directory
+    owner: "{{ logstash_user }}"
+    group: "{{ logstash_group }}"
+    mode: 0o750
+  when:
+    - lookup('vars', item) != None
+    - lookup('vars', item) is file
+  loop: "{{ _logstash_certificate_variables }}"
+  notify: logstash restart service
+
+- name: Upload certificate files
+  copy:
+    src: "{{ lookup('vars', item) }}"
+    dest: >-
+      /etc/logstash/certs/{{
+        item | regex_replace('logstash_config_(.*)_ssl_.*', '\1')
+      }}/{{ lookup('vars', item) | basename }}
+    owner: "{{ logstash_group if item is search '_key' else logstash_user }}"
+    group: "{{ logstash_group }}"
+    mode: "{{ '0o400' if item is search '_key' else '0o640' }}"
+  when:
+    - lookup('vars', item) != None
+    - lookup('vars', item) is file
+  loop: "{{ _logstash_certificate_variables }}"
+  notify: logstash restart service

@@ -1,0 +1,59 @@
+---
+
+- name: Upload logstash configuration
+  copy:
+    content: >-
+      {{
+        logstash_combined_config
+        | to_nice_yaml(indent=2, explicit_start=true)
+      }}
+    dest: /etc/logstash/logstash.yml
+    owner: "{{ logstash_user }}"
+    group: "{{ logstash_group }}"
+    mode: 0o644
+  notify: logstash restart service
+
+- name: Set the minimum heap size for java virtual machine
+  lineinfile:
+    regexp: '^-Xms'
+    line: "-Xms{{ logstash_jvm_min_heap_size }}"
+    path: /etc/logstash/jvm.options
+  notify: logstash restart service
+
+- name: Set the maximum heap size for java virtual machine
+  lineinfile:
+    path: /etc/logstash/jvm.options
+    regexp: '^-Xmx'
+    line: "-Xmx{{ logstash_jvm_max_heap_size }}"
+  notify: logstash restart service
+
+- name: Add further custom JVM configuration
+  blockinfile:
+    path: /etc/logstash/jvm.options
+    block: "{{ logstash_jvm_extra_config }}"
+  when: logstash_jvm_extra_config != None
+  notify: logstash restart service
+
+- name: Upload startup overrides
+  blockinfile:
+    path: /etc/logstash/startup.options
+    block: "{{ logstash_startup_overrides }}"
+  when: logstash_startup_overrides != None
+  notify:
+    - logstash system install
+    - logstash restart service
+
+- name: Configure Logstash pipelines
+  copy:
+    content: >-
+      {{
+        logstash_pipelines
+        | map('flatten_keys')
+        | list
+        | to_nice_yaml(indent=2, explicit_start=true)
+      }}
+    dest: /etc/logstash/pipelines.yml
+    owner: "{{ logstash_user }}"
+    group: "{{ logstash_group }}"
+    mode: 0o640
+  notify: logstash restart service

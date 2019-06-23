@@ -1,0 +1,14 @@
+---
+
+- name: Update logstash system configuration
+  command: bin/system-install
+  args:
+    chdir: /usr/share/logstash
+  listen: logstash system install
+
+- name: Restart logstash
+  systemd:
+    name: logstash
+    state: restarted
+    daemon_reload: true
+  listen: logstash restart service
