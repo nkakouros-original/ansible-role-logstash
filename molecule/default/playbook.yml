@@ -20,6 +20,7 @@
         files:
           - beat-input.conf
           - elastic-output.conf
+          - file-output.conf
     # TODO do not hardcode this
     logstash_keystore_password: 'LjkC*LRLsWJ42/gqR.Z;'
     logstash_config_pkcs1_to_pkcs8:
