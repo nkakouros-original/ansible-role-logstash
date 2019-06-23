@@ -6,12 +6,22 @@ driver:
 lint:
   name: yamllint
 platforms:
-  - name: instance
-    image: centos:7
+  - name: "instance-${MOLECULE_DISTRO:-ubuntu1604}"
+    image: "geerlingguy/docker-${MOLECULE_DISTRO:-ubuntu1604}-ansible:latest"
+    command: ${MOLECULE_INIT_CMD-""}
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    privileged: true
+    pre_build_image: true
 provisioner:
   name: ansible
   lint:
     name: ansible-lint
+  options:
+    vvv: true
+  env:
+    IN_MOLECULE: 'true'
+    ANSIBLE_FILTER_PLUGINS: ../../filter_plugins/
 verifier:
   enabled: false
   name: testinfra
