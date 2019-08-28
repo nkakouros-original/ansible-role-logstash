@@ -5,7 +5,8 @@
     echo openssl pkcs8 -topk8
       -in '{{ item.file }}'
       -out '{{ item.file }}.p8'
-      {{ '-passin env:pass' if item.passphrase | default('') != '' else '' }}
+      {{ '-passin env:pass' if item.passphrase | default('') | length > 0
+         else '' }}
       {{ '-passout env:pass' if item.encrypt | default(false) | bool
          else '-nocrypt' }}
   environment:
@@ -21,7 +22,8 @@
     openssl pkcs8 -topk8
       -in '{{ item.file }}'
       -out '{{ item.file }}.p8'
-      {{ '-passin env:pass' if item.passphrase | default('') != '' else '' }}
+      {{ '-passin env:pass' if item.passphrase | default('') | length > 0
+         else '' }}
       {{ '-passout env:pass' if item.encrypt | default(false) | bool
          else '-nocrypt' }}
   environment:
