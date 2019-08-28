@@ -1,8 +1,4 @@
 ---
 
-- name: dddd
-  debug:
-    msg: "{{ lookup('env', 'ANSIBLE_FILTER_PLUGINS') }}"
-
 - include_tasks: logstash.yml
   when: logstash_enabled | bool

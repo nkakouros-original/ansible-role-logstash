@@ -2,15 +2,30 @@
 
 - name: Convert pkcs1 private keys to pkcs8
   command: >-
-    openssl pkcs8 -topk8
+    echo openssl pkcs8 -topk8
       -in '{{ item.file }}'
       -out '{{ item.file }}.p8'
-      {{ '-passin env:pass' if item.passphrase != None
-         else '' }}
+      {{ '-passin env:pass' if item.passphrase | default('') != '' else '' }}
       {{ '-passout env:pass' if item.encrypt | default(false) | bool
          else '-nocrypt' }}
   environment:
-    pass: "{{ item.passphrase }}"
+    pass: "{{ item.passphrase | default('') }}"
+  args:
+    creates: "{{ item.file }}.p8"
+  loop: "{{ logstash_config_pkcs1_to_pkcs8 }}"
+  delegate_to: localhost
+  become: false
+
+- name: Convert pkcs1 private keys to pkcs8
+  command: >-
+    openssl pkcs8 -topk8
+      -in '{{ item.file }}'
+      -out '{{ item.file }}.p8'
+      {{ '-passin env:pass' if item.passphrase | default('') != '' else '' }}
+      {{ '-passout env:pass' if item.encrypt | default(false) | bool
+         else '-nocrypt' }}
+  environment:
+    pass: "{{ item.passphrase | default('') }}"
   args:
     creates: "{{ item.file }}.p8"
   loop: "{{ logstash_config_pkcs1_to_pkcs8 }}"
@@ -33,7 +48,6 @@
   loop: "{{ logstash_config_pkcs1_to_pkcs12 }}"
   delegate_to: localhost
   become: false
-  no_log: true
 
 - name: Get all certificate variables
   set_fact:

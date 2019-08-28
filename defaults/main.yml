@@ -139,21 +139,24 @@ logstash_config_pkcs1_to_pkcs8: []
 # software in an ELK installation. The logstash certificate key you will get in
 # that case, will not be suitable to use in the logstash beats input plugin
 # directly as it is not in PKCS#8 format. The pkcs#8 version of each key will be
-# placed in the same
-# folder on the ansible controller as the original key with the added extension
-# of `.p8`. Eg: `/etc/certs/logstash.key` will become
+# placed in the same folder on the ansible controller as the original key with
+# the added extension of `.p8`. Eg: `/etc/certs/logstash.key` will become
 # `/etc/certs/logstash.key.p8`. The format of the variable is:
 # ```
 # logstash_config_pkcs1_to_pkcs8:
 #   - file: /path/to/pkcs#1/private/key
 #     passphrase: passphrase-if-private-key-is-encrypted
 #     encrypt: true/false  # whether to apply the same passphrase to the pkcs#8 key
+# ```
+# Logstash seems to fail when the pkcs8 key has a passphrase applied, so you may
+# want to set `encrypt` to false.
 
 logstash_config_pkcs1_to_pkcs12: []
-# The same as `logstash_config_pkcs1_to_pkcs8` but is used to bundle
+# The same as `logstash_config_pkcs1_to_pkcs8` but this is used to bundle
 # certificates and private keys together in a single file. The output file will
 # have a suffix `.p12` and will be placed in the same directory as the original
-# key.  The format is:
+# key. This is useful for instance when configuring the elasticsearch output.
+# The format is:
 # ```
 # logstash_config_pkcs1_to_pkcs12:
 #   - cert: /path/to/the/certificate

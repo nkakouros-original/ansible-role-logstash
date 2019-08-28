@@ -10,5 +10,6 @@
   systemd:
     name: logstash
     state: restarted
+    enabled: true
     daemon_reload: true
   listen: logstash restart service
