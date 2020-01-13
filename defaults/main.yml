@@ -196,10 +196,13 @@ logstash_config_elastic_output_ssl_keystore_password: ~
 logstash_config_elastic_output_conditional: '1 == 1'
 logstash_config_elastic_output_extra: |
   http_compression => true
+logstash_config_elastic_output_index: ~
+logstash_config_elastic_output_manage_template: true
 ## }}}
-# File output configuration | `templates/file-output.conf`
+# File output configuration | `templates/file-output.conf` {{{
 logstash_config_file_output_id: 'file-output'
 logstash_config_file_output_path: /var/log/logstash/file.out
 logstash_config_file_output_conditional: '1 == 1'
 logstash_config_file_output_extra: ~
+# }}}
 # }}}
