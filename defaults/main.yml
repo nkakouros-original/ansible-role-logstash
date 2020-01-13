@@ -19,6 +19,11 @@ logstash_group: logstash
 # installing logstash, the configuration files are owned by user `root` and
 # group `root`.  The default behavior of the role is to set the group ownership
 # to `logstash` and restrict permissions for `other` users.
+
+# Whether to exclude logstash from automatic system updates. Set this to true if
+# you want to manually update logstash. This is valid only for Linux servers
+# that may have some kind of unattended update mechanism.
+logstash_disable_auto_update: false
 # }}}
 # Security {{{
 logstash_keystore_password: ~

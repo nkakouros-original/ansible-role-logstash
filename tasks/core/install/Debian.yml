@@ -20,3 +20,12 @@
   vars:
     packages:
       - logstash
+
+- name: Disable automatic updates
+  copy:
+    content: |
+      Unattended-Upgrade::Package-Blacklist {
+        "logstash";
+      };
+    dest: /etc/apt/apt.conf.d/55logstash-disable
+  when: logstash_disable_auto_update | bool
