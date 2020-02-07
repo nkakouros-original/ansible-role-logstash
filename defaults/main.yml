@@ -169,7 +169,7 @@ logstash_config_pkcs1_to_pkcs12: []
 #     passphrase: passphrase-if-private-key-is-encrypted
 #     encrypt: true/false  # whether to apply the same passphrase to the pcks#12 file
 # ```
-## Beat Input configuration | `templates/beat-input.conf` {{{
+# Beat Input configuration | `templates/beat-input.conf` {{{
 logstash_config_beat_input_port: 5044
 logstash_config_beat_input_host: 0.0.0.0
 logstash_config_beat_input_ssl: false
@@ -182,7 +182,7 @@ logstash_config_beat_input_id: 'beat-input'
 logstash_config_beat_input_conditional: '1 == 1'
 logstash_config_beat_input_extra: ~
 ## }}}
-## Elastisearch output configuration | `templates/elastic-output.conf` {{{
+# Elastisearch output configuration | `templates/elastic-output.conf` {{{
 logstash_config_elastic_output_id: 'elastic-output'
 logstash_config_elastic_output_hosts:
   - 127.0.0.1:9200
