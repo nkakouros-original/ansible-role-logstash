@@ -198,6 +198,12 @@ logstash_config_elastic_output_extra: |
   http_compression => true
 logstash_config_elastic_output_index: ~
 logstash_config_elastic_output_manage_template: true
+
+# An Elasticsearch pipeline to use to process every document that comes out of
+# this output. If a `pipeline` key exists in the `@metadata` field of the
+# incoming document, that pipeline will be used instead (e.g. as in the case of
+# Filebeat inputs that have a `pipeline` configured).
+logstash_config_elastic_output_pipeline: ~
 ## }}}
 # File output configuration | `templates/file-output.conf` {{{
 logstash_config_file_output_id: 'file-output'
