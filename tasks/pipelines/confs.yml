@@ -20,7 +20,7 @@
     owner: "{{ logstash_user }}"
     group: "{{ logstash_group }}"
     mode: 0o0750
-  loop: "{{ logstash_pipeline_configs | subelements('files') }}"
+  loop: "{{ logstash_pipeline_configs | subelements('files', skip_missing=true) }}"
   notify: logstash restart service
 
 - name: Upload pipeline configuration files
@@ -43,5 +43,16 @@
     owner: "{{ logstash_user }}"
     group: "{{ logstash_group }}"
     mode: 0o0640
-  loop: "{{ logstash_pipeline_configs | subelements('files') }}"
+  loop: "{{ logstash_pipeline_configs | subelements('files', skip_missing=true) }}"
+  notify: logstash restart service
+
+- name: Upload inline pipeline configs
+  copy:
+    content: "{{ item.content }}"
+    dest: "{{ logstash_pipelines[0].path.config | dirname }}/{{ item.id }}.conf"
+    owner: "{{ logstash_user }}"
+    group: "{{ logstash_group }}"
+    mode: 0o0640
+  loop: "{{ logstash_pipeline_configs }}"
+  when: item.content is defined
   notify: logstash restart service

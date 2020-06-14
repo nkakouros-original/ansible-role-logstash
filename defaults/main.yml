@@ -7,6 +7,10 @@ logstash_enabled: true
 logstash_major_version: 7
 # The major version of logstash to install.
 
+logstash_minor_version: 7
+# The minor version of logstash to install. Set to `*` to install the
+# latest minor version for the `logstash_major_version`.
+
 logstash_user: root
 # The user that will own logstash configuration files. Logstash will run as the
 # `logstash` user as configured in the systemd configuration file, regardless of
@@ -66,7 +70,7 @@ logstash_pipelines:
     path:
       config: "/etc/logstash/conf.d/*.conf"
 # Use this variable to configure the logstash pipelines. The default value here
-# is the the default that comes with a fresh logstash installation and which
+# is the default that comes with a fresh logstash installation and which
 # defines a single pipeline. This variable will be output as YAML in the
 # `/etc/logstash/pipelines.yml` file.
 
@@ -81,12 +85,19 @@ logstash_pipeline_configs: []
 #       - /path/to/custom/conf1
 #       - beat-input.conf
 # ```
-# The default location to upload pipeline configs is defined in the
-# `vars/main.yml` in the default logstash config that comes with the role.  The
-# default path is `/etc/logstash/conf.d/`. You can set the `path.config` setting
-# in `logstash_config` to override it globally or set the `path.config` setting
-# of a specific pipeline in `logstash_pipelines` to override it for that
-# specific pipeline only.
+# You can also use a `content` key to provide the config inline:
+# logstash_pipeline_configs:
+#   - id: my-custom-config
+#     content: |
+#       output { ... }
+#
+# These will be uploaded to the directory of the first defined pipeline. You can
+# mix files and inline configs.
+#
+# The default location to upload pipeline configs is `/etc/logstash/conf.d/`.
+# You can set the `path.config` setting in `logstash_config` to override it
+# globally or set the `path.config` setting of a specific pipeline in
+# `logstash_pipelines` to override it for that specific pipeline only.
 
 logstash_config: {}
 # Use this variables as a yaml dict to set any logstash configuration

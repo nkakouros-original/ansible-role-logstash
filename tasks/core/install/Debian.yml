@@ -19,7 +19,8 @@
     update_cache: true
   vars:
     packages:
-      - logstash
+      - "logstash=1:{{ logstash_major_version }}.{{
+        '.*' if logstash_minor_version == '*' else logstash_minor_version | string + '.*'}}-1"
 
 - name: Disable automatic updates
   copy:
