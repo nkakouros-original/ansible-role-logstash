@@ -206,9 +206,11 @@ logstash_config_elastic_output_ssl_keystore: ~
 logstash_config_elastic_output_ssl_keystore_password: ~
 logstash_config_elastic_output_conditional: '1 == 1'
 logstash_config_elastic_output_extra: |
-  http_compression => true
+  http_compression => false
 logstash_config_elastic_output_index: ~
 logstash_config_elastic_output_manage_template: true
+logstash_config_elastic_output_ilm_rollover_alias: "%{[@metadata][beat]}"
+logstash_config_elastic_output_ilm_policy: "%{[@metadata][beat]}"
 
 # An Elasticsearch pipeline to use to process every document that comes out of
 # this output. If a `pipeline` key exists in the `@metadata` field of the
