@@ -1,9 +1,8 @@
 ---
 
-- name: Set configuration defaults
+- name: Initialize variable
   set_fact:
-    logstash_combined_config: >-
-      {{ _logstash_default_config | combine(logstash_config, recursive=true) }}
+    logstash_combined_config: {}
 
 - name: Create environment variable to carry the logstash keystore password
   set_fact:

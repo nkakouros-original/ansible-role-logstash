@@ -4,7 +4,9 @@
   copy:
     content: >-
       {{
-        logstash_combined_config
+        _logstash_default_config
+        | combine(logstash_combined_config, recursive=True)
+        | combine(logstash_config, recursive=True)
         | to_nice_yaml(indent=2, explicit_start=true)
       }}
     dest: /etc/logstash/logstash.yml
